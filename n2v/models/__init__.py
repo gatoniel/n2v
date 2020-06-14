@@ -9,7 +9,7 @@ except ModuleNotFoundError as e:
     raise_from(RuntimeError('Please install TensorFlow: https://www.tensorflow.org/install/'), e)
 
 try:
-    import keras
+    from tensorflow import keras
     del keras
 except ModuleNotFoundError as e:
     if e.name in {'theano','cntk'}:
@@ -22,7 +22,9 @@ except ModuleNotFoundError as e:
     else:
         raise e
 
-import keras.backend as K
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import backend as K
 if K.backend() != 'tensorflow':
     raise NotImplementedError(
             "Keras is configured to use the '%s' backend, which is currently not supported. "

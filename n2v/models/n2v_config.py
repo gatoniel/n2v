@@ -1,6 +1,6 @@
 import argparse
 
-import keras.backend as K
+from tensorflow.keras import backend as K
 
 from csbdeep.models import BaseConfig
 from csbdeep.utils import _raise, axes_check_and_normalize, axes_dict, backend_channels_last
@@ -70,12 +70,12 @@ class N2VConfig(argparse.Namespace):
     """
 
     def __init__(self, X, **kwargs):
-        
+
         # X is empty if config is None
         if (X.size != 0):
-    
+
             assert len(X.shape) == 4 or len(X.shape) == 5, "Only 'SZYXC' or 'SYXC' as dimensions is supported."
-    
+
             n_dim = len(X.shape) - 2
             n_channel_in = X.shape[-1]
             n_channel_out = n_channel_in
@@ -89,18 +89,18 @@ class N2VConfig(argparse.Namespace):
                 axes = 'SYXC'
             elif n_dim == 3:
                 axes = 'SZYXC'
-    
+
             # parse and check axes
             axes = axes_check_and_normalize(axes)
             ax = axes_dict(axes)
             ax = {a: (ax[a] is not None) for a in ax}
-    
+
             (ax['X'] and ax['Y']) or _raise(ValueError('lateral axes X and Y must be present.'))
             not (ax['Z'] and ax['T']) or _raise(ValueError('using Z and T axes together not supported.'))
-    
+
             axes.startswith('S') or (not ax['S']) or _raise(ValueError('sample axis S must be first.'))
             axes = axes.replace('S','') # remove sample axis if it exists
-    
+
             if backend_channels_last():
                 if ax['C']:
                     axes[-1] == 'C' or _raise(ValueError('channel axis must be last for backend (%s).' % K.backend()))
@@ -111,7 +111,7 @@ class N2VConfig(argparse.Namespace):
                     axes[0] == 'C' or _raise(ValueError('channel axis must be first for backend (%s).' % K.backend()))
                 else:
                     axes = 'C'+axes
-    
+
             # normalization parameters
             self.means                 = [str(el) for el in means]
             self.stds                  = [str(el) for el in stds]
@@ -120,7 +120,7 @@ class N2VConfig(argparse.Namespace):
             self.axes                  = axes
             self.n_channel_in          = int(n_channel_in)
             self.n_channel_out         = int(n_channel_out)
-    
+
             # default config (can be overwritten by kwargs below)
             self.unet_residual         = False
             self.unet_n_depth          = 2
@@ -131,7 +131,7 @@ class N2VConfig(argparse.Namespace):
                 self.unet_input_shape  = self.n_dim*(None,) + (self.n_channel_in,)
             else:
                 self.unet_input_shape  = (self.n_channel_in,) + self.n_dim*(None,)
-    
+
             self.train_loss            = 'mae'
             self.train_epochs          = 100
             self.train_steps_per_epoch = 400
@@ -152,7 +152,7 @@ class N2VConfig(argparse.Namespace):
                 # warnings.warn("ignoring parameter 'n_dim'")
             except:
                 pass
-            
+
         self.probabilistic         = False
 
         for k in kwargs:

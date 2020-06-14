@@ -6,9 +6,10 @@ from six import string_types
 from csbdeep.utils.six import Path, FileNotFoundError
 from csbdeep.data import PadAndCropResizer
 
-from keras.callbacks import TerminateOnNaN
 import tensorflow as tf
-from keras import backend as K
+from tensorflow import keras
+from tensorflow.keras.callbacks import TerminateOnNaN
+from tensorflow.keras import backend as K
 
 import datetime
 import warnings
@@ -257,13 +258,13 @@ class N2V(CARE):
 
         """
         if optimizer is None:
-            from keras.optimizers import Adam
+            from tensorflow.keras.optimizers import Adam
             optimizer = Adam(lr=self.config.train_learning_rate)
         self.callbacks = self.prepare_model(self.keras_model, optimizer, self.config.train_loss, **kwargs)
 
         if self.basedir is not None:
             if self.config.train_checkpoint is not None:
-                from keras.callbacks import ModelCheckpoint
+                from tensorflow.keras.callbacks import ModelCheckpoint
                 self.callbacks.append(ModelCheckpoint(str(self.logdir / self.config.train_checkpoint), save_best_only=True,  save_weights_only=True))
                 self.callbacks.append(ModelCheckpoint(str(self.logdir / 'weights_now.h5'),             save_best_only=False, save_weights_only=True))
 
@@ -297,7 +298,7 @@ class N2V(CARE):
                         for name, value in logs.items():
                             if name in ['batch', 'size']:
                                 continue
-                            summary = tf.Summary()
+                            summary = tf.compat.v1.Summary()
                             summary_value = summary.value.add()
                             summary_value.simple_value = value.item()
                             summary_value.tag = name
@@ -308,7 +309,7 @@ class N2V(CARE):
                 self.callbacks.append(N2VTensorBoard(log_dir=str(self.logdir), prefix_with_timestamp=False, n_images=3, write_images=True, prob_out=False))
 
         if self.config.train_reduce_lr is not None:
-            from keras.callbacks import ReduceLROnPlateau
+            from tensorflow.keras.callbacks import ReduceLROnPlateau
             rlrop_params = self.config.train_reduce_lr
             if 'verbose' not in rlrop_params:
                 rlrop_params['verbose'] = True
@@ -320,7 +321,7 @@ class N2V(CARE):
     def prepare_model(self, model, optimizer, loss, metrics=('mse', 'mae')):
         """ TODO """
 
-        from keras.optimizers import Optimizer
+        from tensorflow.keras.optimizers import Optimizer
         isinstance(optimizer, Optimizer) or _raise(ValueError())
 
 
@@ -390,7 +391,7 @@ class N2V(CARE):
             pred = np.moveaxis(pred, -1, axes.index('C'))
 
         return pred
-    
+
     def _set_logdir(self):
         self.logdir = self.basedir / self.name
 
@@ -409,7 +410,7 @@ class N2V(CARE):
                 warnings.warn('output path for model already exists, files may be overwritten: %s' % str(self.logdir.resolve()))
             self.logdir.mkdir(parents=True, exist_ok=True)
             save_json(vars(self.config), str(config_file))
-    
+
     @property
     def _config_class(self):
         return N2VConfig
